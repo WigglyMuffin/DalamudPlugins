@@ -16,8 +16,8 @@
         "IconUrl": "https://raw.githubusercontent.com/WigglyMuffin/DalamudPlugins/main/icons/Questionable.png",
         "DownloadLinkInstall": "https://github.com/WigglyMuffin/Questionable/releases/latest/download/latest.zip",
         "DownloadLinkUpdate": "https://github.com/WigglyMuffin/Questionable/releases/latest/download/latest.zip",
-        "DownloadCount": 536,
-        "LastUpdate": "1759666153"
+        "DownloadCount": 537,
+        "LastUpdate": "1759678997"
     },
     {
         "Author": "Liza Carvelli, WigglyMuffin",
@@ -26,13 +26,13 @@
         "Description": "Uploads your game statistics (such as quest progress, gil, retainer stats) to an InfluxDB or QuestDB instance, making it possible to automatically track your progress through external tools such as Grafana.",
         "InternalName": "Influx",
         "RepoUrl": "https://github.com/WigglyMuffin/Influx",
-        "AssemblyVersion": "5.1",
+        "AssemblyVersion": "5.2",
         "ApplicableVersion": "any",
         "DalamudApiLevel": 13,
         "IconUrl": "https://raw.githubusercontent.com/WigglyMuffin/DalamudPlugins/main/icons/Influx.png",
         "DownloadLinkInstall": "https://github.com/WigglyMuffin/Influx/releases/latest/download/latest.zip",
         "DownloadLinkUpdate": "https://github.com/WigglyMuffin/Influx/releases/latest/download/latest.zip",
-        "DownloadCount": 167,
-        "LastUpdate": "1759666153"
+        "DownloadCount": 168,
+        "LastUpdate": "1759678997"
     }
 ]
