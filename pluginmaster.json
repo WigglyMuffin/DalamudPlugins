@@ -14,10 +14,10 @@
         "ApplicableVersion": "any",
         "DalamudApiLevel": 13,
         "IconUrl": "https://raw.githubusercontent.com/WigglyMuffin/DalamudPlugins/main/icons/Questionable.png",
-        "DownloadLinkInstall": "https://github.com/WigglyMuffin/DalamudPlugins/raw/main/plugins/Questionable/latest.zip",
-        "DownloadLinkUpdate": "https://github.com/WigglyMuffin/DalamudPlugins/raw/main/plugins/Questionable/latest.zip",
-        "DownloadCount": 563,
-        "LastUpdate": "1759860513"
+        "DownloadLinkInstall": "https://github.com/WigglyMuffin/Questionable/releases/latest/download/latest.zip",
+        "DownloadLinkUpdate": "https://github.com/WigglyMuffin/Questionable/releases/latest/download/latest.zip",
+        "DownloadCount": 564,
+        "LastUpdate": "1759866699"
     },
     {
         "Author": "Liza Carvelli, WigglyMuffin",
@@ -30,9 +30,9 @@
         "ApplicableVersion": "any",
         "DalamudApiLevel": 13,
         "IconUrl": "https://raw.githubusercontent.com/WigglyMuffin/DalamudPlugins/main/icons/Influx.png",
-        "DownloadLinkInstall": "https://github.com/WigglyMuffin/DalamudPlugins/raw/main/plugins/Influx/latest.zip",
-        "DownloadLinkUpdate": "https://github.com/WigglyMuffin/DalamudPlugins/raw/main/plugins/Influx/latest.zip",
-        "DownloadCount": 183,
-        "LastUpdate": "1759860513"
+        "DownloadLinkInstall": "https://github.com/WigglyMuffin/Influx/releases/latest/download/latest.zip",
+        "DownloadLinkUpdate": "https://github.com/WigglyMuffin/Influx/releases/latest/download/latest.zip",
+        "DownloadCount": 184,
+        "LastUpdate": "1759866699"
     }
 ]
