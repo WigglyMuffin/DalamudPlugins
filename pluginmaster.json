@@ -10,14 +10,14 @@
         ],
         "InternalName": "Questionable",
         "RepoUrl": "https://github.com/WigglyMuffin/Questionable",
-        "AssemblyVersion": "6.32",
+        "AssemblyVersion": "6.33",
         "ApplicableVersion": "any",
         "DalamudApiLevel": 13,
         "IconUrl": "https://raw.githubusercontent.com/WigglyMuffin/DalamudPlugins/main/icons/Questionable.png",
         "DownloadLinkInstall": "https://github.com/WigglyMuffin/Questionable/releases/latest/download/latest.zip",
         "DownloadLinkUpdate": "https://github.com/WigglyMuffin/Questionable/releases/latest/download/latest.zip",
-        "DownloadCount": 1481,
-        "LastUpdate": "1761239566"
+        "DownloadCount": 1487,
+        "LastUpdate": "1761241901"
     },
     {
         "Author": "Liza Carvelli, WigglyMuffin",
@@ -32,7 +32,7 @@
         "IconUrl": "https://raw.githubusercontent.com/WigglyMuffin/DalamudPlugins/main/icons/Influx.png",
         "DownloadLinkInstall": "https://github.com/WigglyMuffin/Influx/releases/latest/download/latest.zip",
         "DownloadLinkUpdate": "https://github.com/WigglyMuffin/Influx/releases/latest/download/latest.zip",
-        "DownloadCount": 270,
-        "LastUpdate": "1761239566"
+        "DownloadCount": 271,
+        "LastUpdate": "1761241901"
     }
 ]
