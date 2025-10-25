@@ -16,8 +16,8 @@
         "IconUrl": "https://raw.githubusercontent.com/WigglyMuffin/DalamudPlugins/main/icons/Questionable.png",
         "DownloadLinkInstall": "https://github.com/WigglyMuffin/Questionable/releases/latest/download/latest.zip",
         "DownloadLinkUpdate": "https://github.com/WigglyMuffin/Questionable/releases/latest/download/latest.zip",
-        "DownloadCount": 1568,
-        "LastUpdate": "1761351884"
+        "DownloadCount": 1574,
+        "LastUpdate": "1761372482"
     },
     {
         "Author": "Liza Carvelli, WigglyMuffin",
@@ -32,7 +32,7 @@
         "IconUrl": "https://raw.githubusercontent.com/WigglyMuffin/DalamudPlugins/main/icons/Influx.png",
         "DownloadLinkInstall": "https://github.com/WigglyMuffin/Influx/releases/latest/download/latest.zip",
         "DownloadLinkUpdate": "https://github.com/WigglyMuffin/Influx/releases/latest/download/latest.zip",
-        "DownloadCount": 279,
-        "LastUpdate": "1761351884"
+        "DownloadCount": 280,
+        "LastUpdate": "1761372482"
     }
 ]
