@@ -525,10 +525,14 @@ class PluginMasterGenerator:
         self.repo_processor = RepositoryPluginProcessor(config)
         self.external_manager = ExternalPluginManager(config)
         self.download_updater = DownloadCountUpdater()
+        self.existing_download_counts = {}
 
     def generate(self) -> None:
         """Generate the plugin master file."""
         print("Starting plugin master generation...")
+
+        # Load existing download counts
+        self._load_existing_download_counts()
 
         if self.config.external_plugins:
             print("Downloading external plugins...")
@@ -541,6 +545,10 @@ class PluginMasterGenerator:
 
         for manifest in manifests:
             self.processor.add_download_links(manifest)
+            # Restore existing download count before updating
+            plugin_name = manifest.get("InternalName")
+            if plugin_name in self.existing_download_counts:
+                manifest["DownloadCount"] = self.existing_download_counts[plugin_name]
 
         print("Updating download counts...")
         self.download_updater.update_download_counts(manifests)
@@ -551,6 +559,21 @@ class PluginMasterGenerator:
         self._update_last_modified(manifests)
 
         print(f"Generated plugin master with {len(manifests)} plugins")
+
+    def _load_existing_download_counts(self) -> None:
+        """Load download counts from existing pluginmaster.json if it exists."""
+        if self.config.output_file.exists():
+            try:
+                with open(self.config.output_file, 'r', encoding='utf-8') as f:
+                    existing_data = json.load(f)
+                    for plugin in existing_data:
+                        plugin_name = plugin.get("InternalName")
+                        download_count = plugin.get("DownloadCount", 0)
+                        if plugin_name:
+                            self.existing_download_counts[plugin_name] = download_count
+                print(f"Loaded existing download counts for {len(self.existing_download_counts)} plugins")
+            except Exception as e:
+                print(f"Could not load existing download counts: {e}")
 
     def _collect_manifests_with_priority(self) -> List[Dict[str, Any]]:
         """Collect plugin manifests with repository-first priority system."""
