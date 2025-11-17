@@ -59,38 +59,12 @@ class PluginProcessor:
     def __init__(self, config: Config):
         self.config = config
 
-    @staticmethod
-    def normalise_version(version: str, min_components: int = 2) -> str:
-        """Normalise version string to ensure it has at least the minimum number of components.
-        
-        Args:
-            version: Version string to normalise (e.g., "1", "1.2", "1.2.3.4")
-            min_components: Minimum number of version components (default: 2)
-        
-        Returns:
-            Normalised version string (e.g., "1.0", "1.2", "1.2.3.4")
-        """
-        try:
-            parts = version.split('.')
-            # Pad with zeros to ensure at least min_components
-            while len(parts) < min_components:
-                parts.append('0')
-            return '.'.join(parts)
-        except Exception:
-            # If parsing fails, return original version
-            return version
-
     def extract_manifest_from_zip(self, zip_path: Path, plugin_name: str) -> Optional[Dict[str, Any]]:
         """Extract and parse manifest from a plugin ZIP file."""
         try:
             with ZipFile(zip_path) as z:
                 manifest_data = z.read(f"{plugin_name}.json").decode("utf-8")
                 manifest = json.loads(manifest_data)
-                
-                # Normalise version fields
-                if "AssemblyVersion" in manifest:
-                    manifest["AssemblyVersion"] = self.normalise_version(manifest["AssemblyVersion"])
-                
                 return manifest
         except Exception as e:
             print(f"Error reading manifest from {zip_path}: {e}")
@@ -295,10 +269,6 @@ class RepositoryPluginProcessor:
 
             manifest = self._extract_manifest_from_url(plugin_zip_url, plugin_name)
             if manifest:
-                # Normalise version
-                if "AssemblyVersion" in manifest:
-                    manifest["AssemblyVersion"] = PluginProcessor.normalise_version(manifest["AssemblyVersion"])
-                
                 manifest["RepoUrl"] = repo_url
                 manifest["_repository_source"] = True
                 if release_timestamp:
