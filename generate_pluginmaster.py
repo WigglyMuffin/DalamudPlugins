@@ -545,13 +545,16 @@ class PluginMasterGenerator:
 
         for manifest in manifests:
             self.processor.add_download_links(manifest)
-            # Restore existing download count before updating
-            plugin_name = manifest.get("InternalName")
-            if plugin_name in self.existing_download_counts:
-                manifest["DownloadCount"] = self.existing_download_counts[plugin_name]
 
         print("Updating download counts...")
         self.download_updater.update_download_counts(manifests)
+        
+        # Use existing counts as fallback for plugins that couldn't be updated
+        for manifest in manifests:
+            plugin_name = manifest.get("InternalName")
+            if manifest.get("DownloadCount", 0) == 0 and plugin_name in self.existing_download_counts:
+                manifest["DownloadCount"] = self.existing_download_counts[plugin_name]
+                print(f"Using cached download count for {plugin_name}: {manifest['DownloadCount']}")
 
         print("Writing plugin master file...")
         self._write_plugin_master(manifests)
