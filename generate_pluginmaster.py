@@ -18,6 +18,7 @@ class Config:
     download_urls: Dict[str, str]
     required_manifest_keys: List[str]
     field_duplicates: Dict[str, List[str]]
+    plugin_aliases: Dict[str, str]
 
     @classmethod
     def load_default(cls) -> 'Config':
@@ -27,7 +28,12 @@ class Config:
 
         repository_list = {
             "Questionable": "https://github.com/WigglyMuffin/Questionable",
+            "QuestionablePlus": "https://github.com/WigglyMuffin/Questionable",
             "Influx": "https://github.com/WigglyMuffin/Influx",
+        }
+
+        plugin_aliases = {
+            "QuestionablePlus": "Questionable",
         }
 
         return cls(
@@ -49,7 +55,8 @@ class Config:
             ],
             field_duplicates={
                 "DownloadLinkInstall": ["DownloadLinkUpdate"]
-            }
+            },
+            plugin_aliases=plugin_aliases
         )
 
 
@@ -334,12 +341,20 @@ class RepositoryPluginProcessor:
                     for chunk in response.iter_content(chunk_size=8192):
                         f.write(chunk)
 
+                actual_plugin_name = self.config.plugin_aliases.get(plugin_name, plugin_name)
+
                 with ZipFile(temp_zip_path) as z:
-                    manifest_data = z.read(f"{plugin_name}.json").decode("utf-8")
-                    return json.loads(manifest_data)
+                    manifest_data = z.read(f"{actual_plugin_name}.json").decode("utf-8")
+                    manifest = json.loads(manifest_data)
+                
+                    if plugin_name in self.config.plugin_aliases:
+                        manifest["InternalName"] = plugin_name
+                        manifest["Name"] = f"{manifest.get('Name', plugin_name)} Plus"
+                        print(f"Created alias '{plugin_name}' for '{actual_plugin_name}'")
+                
+                    return manifest
 
             finally:
-                # Clean up temporary file
                 if temp_zip_path.exists():
                     temp_zip_path.unlink()
 
