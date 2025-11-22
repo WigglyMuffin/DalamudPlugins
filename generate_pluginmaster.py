@@ -720,10 +720,11 @@ class PluginMasterGenerator:
         for manifest in manifests:
             try:
                 if manifest.get("_repository_source"):
-                    del manifest["_repository_source"]
                     if "LastUpdate" in manifest:
                         print(f"Preserving GitHub release timestamp for {manifest['InternalName']}: {manifest['LastUpdate']}")
+                        del manifest["_repository_source"]
                     else:
+                        del manifest["_repository_source"]
                         self._set_local_timestamp(manifest, manifest["InternalName"])
                 else:
                     self._set_local_timestamp(manifest, manifest["InternalName"])
