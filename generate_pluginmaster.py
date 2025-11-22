@@ -601,7 +601,7 @@ class PluginMasterGenerator:
             print(f"Set current timestamp for {alias_name}: {manifest['LastUpdate']}")
     
             with open(output_file, 'w', encoding='utf-8') as f:
-                json.dump([manifest], f, indent=4, ensure_ascii=False)
+                json.dump([manifest], f, indent=4, ensure_ascii=False, sort_keys=True)
     
             print(f"Successfully generated {output_file} for {alias_name}")
 
@@ -710,7 +710,7 @@ class PluginMasterGenerator:
     def _write_plugin_master(self, manifests: List[Dict[str, Any]]) -> None:
         """Write the plugin master JSON file."""
         with open(self.config.output_file, 'w', encoding='utf-8') as f:
-            json.dump(manifests, f, indent=4, ensure_ascii=False)
+            json.dump(manifests, f, indent=4, ensure_ascii=False, sort_keys=True)
 
     def _update_last_modified(self, manifests: List[Dict[str, Any]]) -> None:
         """Update LastUpdate timestamps based on file modification times or repository release dates."""
