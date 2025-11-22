@@ -55,7 +55,8 @@ class Config:
                 "Author", "Name", "Punchline", "Description", "Tags",
                 "InternalName", "RepoUrl", "Changelog", "AssemblyVersion",
                 "ApplicableVersion", "DalamudApiLevel", "TestingAssemblyVersion",
-                "TestingDalamudApiLevel", "IconUrl", "ImageUrls", "LastUpdate"
+                "TestingDalamudApiLevel", "IconUrl", "ImageUrls", "LastUpdate",
+                "DownloadCount"
             ],
             field_duplicates={
                 "DownloadLinkInstall": ["DownloadLinkUpdate"]
