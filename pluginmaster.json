@@ -14,7 +14,7 @@
         "ApplicableVersion": "any",
         "DalamudApiLevel": 13,
         "IconUrl": "https://raw.githubusercontent.com/WigglyMuffin/DalamudPlugins/main/icons/Questionable.png",
-        "LastUpdate": "1763829454"
+        "LastUpdate": "1763829612"
     },
     {
         "Author": "Liza Carvelli, WigglyMuffin",
@@ -27,6 +27,6 @@
         "ApplicableVersion": "any",
         "DalamudApiLevel": 13,
         "IconUrl": "https://raw.githubusercontent.com/WigglyMuffin/DalamudPlugins/main/icons/Influx.png",
-        "LastUpdate": "1763829454"
+        "LastUpdate": "1763829612"
     }
 ]
