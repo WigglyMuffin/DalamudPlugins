@@ -18,7 +18,7 @@ class Config:
     download_urls: Dict[str, str]
     required_manifest_keys: List[str]
     field_duplicates: Dict[str, List[str]]
-    plugin_aliases: Dict[str, Dict[str, Any]]  # Changed: now maps alias -> config dict
+    plugin_aliases: Dict[str, Dict[str, Any]]
 
     @classmethod
     def load_default(cls) -> 'Config':
@@ -31,7 +31,6 @@ class Config:
             "Influx": "https://github.com/WigglyMuffin/Influx",
         }
 
-        # Define aliases with their source plugin and output file
         plugin_aliases = {
             "QuestionablePlus": {
                 "source": "Questionable",
@@ -139,7 +138,6 @@ class PluginProcessor:
                 branch=self.config.branch, plugin_name=plugin_name
             )
 
-        # Duplicate fields as configured
         for src, targets in self.config.field_duplicates.items():
             for target in targets:
                 if src in manifest and target not in manifest:
@@ -171,14 +169,12 @@ class PluginProcessor:
 
                 preferred_asset_name = None
 
-                # Priority 1: Look for "latest.zip" (exact match)
                 for asset in assets:
                     asset_name = asset.get("name", "")
                     if asset_name == "latest.zip":
                         preferred_asset_name = asset_name
                         break
 
-                # Priority 2: Look for versioned files like "PluginName-version.zip"
                 if not preferred_asset_name:
                     for asset in assets:
                         asset_name = asset.get("name", "")
@@ -188,7 +184,6 @@ class PluginProcessor:
                             preferred_asset_name = asset_name
                             break
 
-                # Priority 3: Look for exact plugin name match "PluginName.zip"
                 if not preferred_asset_name:
                     for asset in assets:
                         asset_name = asset.get("name", "")
@@ -196,7 +191,6 @@ class PluginProcessor:
                             preferred_asset_name = asset_name
                             break
 
-                # Priority 4: Fall back to any ZIP file
                 if not preferred_asset_name:
                     for asset in assets:
                         asset_name = asset.get("name", "")
@@ -204,9 +198,7 @@ class PluginProcessor:
                             preferred_asset_name = asset_name
                             break
 
-                # If we found a preferred plugin, return stable latest release URL
                 if preferred_asset_name:
-                    # Use GitHub's latest release download URL pattern that always points to latest
                     stable_url = f"https://github.com/{owner}/{repo}/releases/latest/download/{preferred_asset_name}"
                     return stable_url
 
@@ -299,34 +291,28 @@ class RepositoryPluginProcessor:
         assets = release_data.get("assets", [])
 
         repo_info = release_data.get("html_url", "")
-        # Extract base repo URL from release URL
         if "/releases/tag/" in repo_info:
             repo_url = repo_info.split("/releases/tag/")[0]
         else:
-            # Fallback: try to get from repository field
             repo_data = release_data.get("repository", {})
             repo_url = repo_data.get("html_url", "")
 
         if not repo_url:
             return None
 
-        # Priority 1: Look for "latest.zip"
         for asset in assets:
             if asset.get("name") == "latest.zip":
                 return f"{repo_url}/releases/latest/download/latest.zip"
 
-        # Priority 2: Look for exact plugin name match
         for asset in assets:
             if asset.get("name") == f"{plugin_name}.zip":
                 return f"{repo_url}/releases/latest/download/{plugin_name}.zip"
 
-        # Priority 3: Look for versioned files
         for asset in assets:
             asset_name = asset.get("name", "")
             if asset_name.endswith(".zip") and asset_name.startswith(f"{plugin_name}-"):
                 return f"{repo_url}/releases/latest/download/{asset_name}"
 
-        # Priority 4: Any ZIP file
         for asset in assets:
             if asset.get("name", "").endswith(".zip"):
                 asset_name = asset.get("name")
@@ -346,7 +332,6 @@ class RepositoryPluginProcessor:
                     for chunk in response.iter_content(chunk_size=8192):
                         f.write(chunk)
 
-                # Check if this is an alias - look up source plugin name
                 actual_plugin_name = plugin_name
                 for alias_name, alias_config in self.config.plugin_aliases.items():
                     if plugin_name == alias_name:
@@ -357,7 +342,6 @@ class RepositoryPluginProcessor:
                     manifest_data = z.read(f"{actual_plugin_name}.json").decode("utf-8")
                     manifest = json.loads(manifest_data)
             
-                    # Don't modify the manifest here - keep it as-is
                     return manifest
 
             finally:
@@ -503,7 +487,6 @@ class DownloadCountUpdater:
 
             response = requests.get(api_url, headers=self.headers)
 
-            # Handle different HTTP status codes
             if response.status_code == 404:
                 print(f"Repository {owner}/{repo} not found or is private - skipping download count")
                 return 0
@@ -518,7 +501,6 @@ class DownloadCountUpdater:
 
             releases = response.json()
 
-            # Handle case where repository has no releases
             if not releases:
                 print(f"Repository {owner}/{repo} has no releases")
                 return 0
@@ -548,11 +530,10 @@ class PluginMasterGenerator:
         self.download_updater = DownloadCountUpdater()
         self.existing_download_counts = {}
 
-    def generate(self) -> None:  # Fixed: proper indentation
+    def generate(self) -> None:
         """Generate the plugin master file."""
         print("Starting plugin master generation...")
 
-        # Load existing download counts
         self._load_existing_download_counts()
 
         if self.config.external_plugins:
@@ -570,7 +551,6 @@ class PluginMasterGenerator:
         print("Updating download counts...")
         self.download_updater.update_download_counts(manifests)
         
-        # Use existing counts as fallback for plugins that couldn't be updated
         for manifest in manifests:
             plugin_name = manifest.get("InternalName")
             if manifest.get("DownloadCount", 0) == 0 and plugin_name in self.existing_download_counts:
@@ -582,53 +562,50 @@ class PluginMasterGenerator:
 
         self._update_last_modified(manifests)
 
-        # Generate separate alias files
         print("Generating alias plugin master files...")
         self._generate_alias_files()
 
         print(f"Generated plugin master with {len(manifests)} plugins")
 
-    def _generate_alias_files(self) -> None:  # Fixed: proper indentation
+    def _generate_alias_files(self) -> None:
         """Generate separate pluginmaster files for aliases."""
         for alias_name, alias_config in self.config.plugin_aliases.items():
             print(f"\nGenerating alias file for {alias_name}...")
-        
+    
             source_plugin = alias_config["source"]
             source_repo = alias_config["source_repo"]
             output_file = Path(alias_config["output_file"])
             name_suffix = alias_config.get("name_suffix", " (Alternative)")
-        
-            # Fetch the source plugin manifest
+    
             repo_processor = RepositoryPluginProcessor(self.config)
             manifest = repo_processor._get_manifest_from_repository(source_plugin, source_repo)
-        
+    
             if not manifest:
                 print(f"Could not fetch manifest for {source_plugin}, skipping alias {alias_name}")
                 continue
-        
-            # Modify the manifest for the alias
+    
             manifest["InternalName"] = alias_name
             manifest["Name"] = f"{manifest.get('Name', source_plugin)}{name_suffix}"
-        
-            # Trim and add download links
+    
             manifest = self.processor.trim_manifest(manifest)
             self.processor.add_download_links(manifest)
-        
-            # Update download count
+    
             self.download_updater.update_download_counts([manifest])
-        
-            # Use cached count if available
+    
             if manifest.get("DownloadCount", 0) == 0 and alias_name in self.existing_download_counts:
                 manifest["DownloadCount"] = self.existing_download_counts[alias_name]
-        
-            # Update last modified
+    
             if manifest.get("_repository_source"):
                 del manifest["_repository_source"]
         
-            # Write to separate file
+            import time
+            six_hours_ago = int(time.time()) - (6 * 60 * 60)
+            manifest["LastUpdate"] = str(six_hours_ago)
+            print(f"Set fake timestamp for {alias_name}: 6 hours ago ({six_hours_ago})")
+    
             with open(output_file, 'w', encoding='utf-8') as f:
                 json.dump([manifest], f, indent=4, ensure_ascii=False)
-        
+    
             print(f"Successfully generated {output_file} for {alias_name}")
 
     def _load_existing_download_counts(self) -> None:
@@ -651,7 +628,6 @@ class PluginMasterGenerator:
         manifests = []
         processed_plugins = set()
 
-        # Priority 1: Process repository list first
         print("Processing repository-configured plugins...")
         repo_manifests = self.repo_processor.get_repository_plugins()
 
@@ -669,7 +645,6 @@ class PluginMasterGenerator:
 
                 processed_plugins.add(plugin_name)
 
-        # Priority 2: Process remaining local plugins not in repository list
         print("Processing remaining local plugins...")
         local_manifests = self._collect_local_manifests()
         
