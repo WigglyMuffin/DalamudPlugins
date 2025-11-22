@@ -719,14 +719,14 @@ class PluginMasterGenerator:
         """Update LastUpdate timestamps based on file modification times or repository release dates."""
         for manifest in manifests:
             try:
-                plugin_name = manifest["InternalName"]
-
                 if manifest.get("_repository_source"):
                     del manifest["_repository_source"]
-                    if "LastUpdate" not in manifest:
-                        self._set_local_timestamp(manifest, plugin_name)
+                    if "LastUpdate" in manifest:
+                        print(f"Preserving GitHub release timestamp for {manifest['InternalName']}: {manifest['LastUpdate']}")
+                    else:
+                        self._set_local_timestamp(manifest, manifest["InternalName"])
                 else:
-                    self._set_local_timestamp(manifest, plugin_name)
+                    self._set_local_timestamp(manifest, manifest["InternalName"])
 
             except Exception as e:
                 print(f"Error updating last modified time for {manifest.get('InternalName', 'unknown')}: {e}")
