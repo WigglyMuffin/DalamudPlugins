@@ -543,19 +543,19 @@ class PluginMasterGenerator:
         print("Collecting plugin manifests...")
         manifests = self._collect_manifests_with_priority()
 
-        manifests = [self.processor.trim_manifest(m) for m in manifests]
-
         for manifest in manifests:
             self.processor.add_download_links(manifest)
 
         print("Updating download counts...")
         self.download_updater.update_download_counts(manifests)
-        
+    
         for manifest in manifests:
             plugin_name = manifest.get("InternalName")
             if manifest.get("DownloadCount", 0) == 0 and plugin_name in self.existing_download_counts:
                 manifest["DownloadCount"] = self.existing_download_counts[plugin_name]
                 print(f"Using cached download count for {plugin_name}: {manifest['DownloadCount']}")
+
+        manifests = [self.processor.trim_manifest(m) for m in manifests]
 
         print("Writing main plugin master file...")
         self._write_plugin_master(manifests)
