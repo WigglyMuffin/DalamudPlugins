@@ -587,8 +587,6 @@ class PluginMasterGenerator:
             manifest["InternalName"] = alias_name
             manifest["Name"] = f"{manifest.get('Name', source_plugin)}{name_suffix}"
     
-            original_timestamp = manifest.get("LastUpdate")
-            
             manifest = self.processor.trim_manifest(manifest)
             self.processor.add_download_links(manifest)
     
@@ -597,13 +595,9 @@ class PluginMasterGenerator:
             if manifest.get("DownloadCount", 0) == 0 and alias_name in self.existing_download_counts:
                 manifest["DownloadCount"] = self.existing_download_counts[alias_name]
     
-            if original_timestamp:
-                manifest["LastUpdate"] = original_timestamp
-                print(f"Using GitHub release timestamp for {alias_name}: {original_timestamp}")
-            else:
-                import time
-                manifest["LastUpdate"] = str(int(time.time()))
-                print(f"No release timestamp available, using current time for {alias_name}")
+            import time
+            manifest["LastUpdate"] = str(int(time.time()))
+            print(f"Set current timestamp for {alias_name}: {manifest['LastUpdate']}")
     
             with open(output_file, 'w', encoding='utf-8') as f:
                 json.dump([manifest], f, indent=4, ensure_ascii=False)
