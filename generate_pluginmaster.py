@@ -35,7 +35,7 @@ class Config:
             "QuestionablePlus": {
                 "source": "Questionable",
                 "source_repo": "https://github.com/WigglyMuffin/Questionable",
-                "output_file": "pluginmaster_guh.json",
+                "output_file": "repo.json",
                 "name_suffix": " Plus"
             }
         }
