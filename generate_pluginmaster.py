@@ -555,12 +555,12 @@ class PluginMasterGenerator:
                 manifest["DownloadCount"] = self.existing_download_counts[plugin_name]
                 print(f"Using cached download count for {plugin_name}: {manifest['DownloadCount']}")
 
+        self._update_last_modified(manifests)
+
         manifests = [self.processor.trim_manifest(m) for m in manifests]
 
         print("Writing main plugin master file...")
         self._write_plugin_master(manifests)
-
-        self._update_last_modified(manifests)
 
         print("Generating alias plugin master files...")
         self._generate_alias_files()
