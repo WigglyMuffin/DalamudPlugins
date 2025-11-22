@@ -18,7 +18,7 @@ class Config:
     download_urls: Dict[str, str]
     required_manifest_keys: List[str]
     field_duplicates: Dict[str, List[str]]
-    plugin_aliases: Dict[str, str]
+    plugin_aliases: Dict[str, Dict[str, Any]]  # Changed: now maps alias -> config dict
 
     @classmethod
     def load_default(cls) -> 'Config':
@@ -28,12 +28,17 @@ class Config:
 
         repository_list = {
             "Questionable": "https://github.com/WigglyMuffin/Questionable",
-            "QuestionablePlus": "https://github.com/WigglyMuffin/Questionable",
             "Influx": "https://github.com/WigglyMuffin/Influx",
         }
 
+        # Define aliases with their source plugin and output file
         plugin_aliases = {
-            "QuestionablePlus": "Questionable",
+            "QuestionablePlus": {
+                "source": "Questionable",
+                "source_repo": "https://github.com/WigglyMuffin/Questionable",
+                "output_file": "pluginmaster_guh.json",
+                "name_suffix": " Plus"
+            }
         }
 
         return cls(
@@ -341,17 +346,18 @@ class RepositoryPluginProcessor:
                     for chunk in response.iter_content(chunk_size=8192):
                         f.write(chunk)
 
-                actual_plugin_name = self.config.plugin_aliases.get(plugin_name, plugin_name)
+                # Check if this is an alias - look up source plugin name
+                actual_plugin_name = plugin_name
+                for alias_name, alias_config in self.config.plugin_aliases.items():
+                    if plugin_name == alias_name:
+                        actual_plugin_name = alias_config["source"]
+                        break
 
                 with ZipFile(temp_zip_path) as z:
                     manifest_data = z.read(f"{actual_plugin_name}.json").decode("utf-8")
                     manifest = json.loads(manifest_data)
-                
-                    if plugin_name in self.config.plugin_aliases:
-                        manifest["InternalName"] = plugin_name
-                        manifest["Name"] = f"{manifest.get('Name', plugin_name)} Plus"
-                        print(f"Created alias '{plugin_name}' for '{actual_plugin_name}'")
-                
+            
+                    # Don't modify the manifest here - keep it as-is
                     return manifest
 
             finally:
@@ -542,7 +548,7 @@ class PluginMasterGenerator:
         self.download_updater = DownloadCountUpdater()
         self.existing_download_counts = {}
 
-    def generate(self) -> None:
+    def generate(self) -> None:  # Fixed: proper indentation
         """Generate the plugin master file."""
         print("Starting plugin master generation...")
 
@@ -571,12 +577,59 @@ class PluginMasterGenerator:
                 manifest["DownloadCount"] = self.existing_download_counts[plugin_name]
                 print(f"Using cached download count for {plugin_name}: {manifest['DownloadCount']}")
 
-        print("Writing plugin master file...")
+        print("Writing main plugin master file...")
         self._write_plugin_master(manifests)
 
         self._update_last_modified(manifests)
 
+        # Generate separate alias files
+        print("Generating alias plugin master files...")
+        self._generate_alias_files()
+
         print(f"Generated plugin master with {len(manifests)} plugins")
+
+    def _generate_alias_files(self) -> None:  # Fixed: proper indentation
+        """Generate separate pluginmaster files for aliases."""
+        for alias_name, alias_config in self.config.plugin_aliases.items():
+            print(f"\nGenerating alias file for {alias_name}...")
+        
+            source_plugin = alias_config["source"]
+            source_repo = alias_config["source_repo"]
+            output_file = Path(alias_config["output_file"])
+            name_suffix = alias_config.get("name_suffix", " (Alternative)")
+        
+            # Fetch the source plugin manifest
+            repo_processor = RepositoryPluginProcessor(self.config)
+            manifest = repo_processor._get_manifest_from_repository(source_plugin, source_repo)
+        
+            if not manifest:
+                print(f"Could not fetch manifest for {source_plugin}, skipping alias {alias_name}")
+                continue
+        
+            # Modify the manifest for the alias
+            manifest["InternalName"] = alias_name
+            manifest["Name"] = f"{manifest.get('Name', source_plugin)}{name_suffix}"
+        
+            # Trim and add download links
+            manifest = self.processor.trim_manifest(manifest)
+            self.processor.add_download_links(manifest)
+        
+            # Update download count
+            self.download_updater.update_download_counts([manifest])
+        
+            # Use cached count if available
+            if manifest.get("DownloadCount", 0) == 0 and alias_name in self.existing_download_counts:
+                manifest["DownloadCount"] = self.existing_download_counts[alias_name]
+        
+            # Update last modified
+            if manifest.get("_repository_source"):
+                del manifest["_repository_source"]
+        
+            # Write to separate file
+            with open(output_file, 'w', encoding='utf-8') as f:
+                json.dump([manifest], f, indent=4, ensure_ascii=False)
+        
+            print(f"Successfully generated {output_file} for {alias_name}")
 
     def _load_existing_download_counts(self) -> None:
         """Load download counts from existing pluginmaster.json if it exists."""
@@ -720,7 +773,6 @@ class PluginMasterGenerator:
         else:
             import time
             manifest["LastUpdate"] = str(int(time.time()))
-
 
 def main():
     """Main entry point."""
