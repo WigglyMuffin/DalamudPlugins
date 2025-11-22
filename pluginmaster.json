@@ -15,7 +15,9 @@
         "DalamudApiLevel": 13,
         "IconUrl": "https://raw.githubusercontent.com/WigglyMuffin/DalamudPlugins/main/icons/Questionable.png",
         "LastUpdate": "1763502981",
-        "DownloadCount": 1795
+        "DownloadCount": 1796,
+        "DownloadLinkInstall": "https://github.com/WigglyMuffin/Questionable/releases/latest/download/latest.zip",
+        "DownloadLinkUpdate": "https://github.com/WigglyMuffin/Questionable/releases/latest/download/latest.zip"
     },
     {
         "Author": "Liza Carvelli, WigglyMuffin",
@@ -29,6 +31,8 @@
         "DalamudApiLevel": 13,
         "IconUrl": "https://raw.githubusercontent.com/WigglyMuffin/DalamudPlugins/main/icons/Influx.png",
         "LastUpdate": "1763407556",
-        "DownloadCount": 440
+        "DownloadCount": 441,
+        "DownloadLinkInstall": "https://github.com/WigglyMuffin/Influx/releases/latest/download/latest.zip",
+        "DownloadLinkUpdate": "https://github.com/WigglyMuffin/Influx/releases/latest/download/latest.zip"
     }
 ]
