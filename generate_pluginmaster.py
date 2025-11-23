@@ -31,14 +31,16 @@ class Config:
             "Influx": "https://github.com/WigglyMuffin/Influx",
         }
 
-        plugin_aliases = {
-            "QuestionablePlus": {
-                "source": "Questionable",
-                "source_repo": "https://github.com/WigglyMuffin/Questionable",
-                "output_file": "repo.json",
-                "name_suffix": " Plus"
-            }
-        }
+        plugin_aliases = {}
+        # Disabled for now
+        # plugin_aliases = {
+        #     "QuestionablePlus": {
+        #         "source": "Questionable",
+        #         "source_repo": "https://github.com/WigglyMuffin/Questionable",
+        #         "output_file": "repo.json",
+        #         "name_suffix": " Plus"
+        #     }
+        # }
 
         return cls(
             branch=branch,
@@ -63,7 +65,6 @@ class Config:
             },
             plugin_aliases=plugin_aliases
         )
-
 
 class PluginProcessor:
     """Handles processing of individual plugin manifests."""
