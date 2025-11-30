@@ -319,46 +319,39 @@ class RepositoryPluginProcessor:
         
         print(f"Available assets for {plugin_name}: {[asset.get('name') for asset in assets]}")
 
-        repo_info = release_data.get("html_url", "")
-        if "/releases/tag/" in repo_info:
-            repo_url = repo_info.split("/releases/tag/")[0]
-        else:
-            repo_data = release_data.get("repository", {})
-            repo_url = repo_data.get("html_url", "")
-
-        if not repo_url:
-            return None
-
         for asset in assets:
             if asset.get("name") == "latest.zip":
-                return f"{repo_url}/releases/latest/download/latest.zip"
+                return asset.get("url")
 
         for asset in assets:
             if asset.get("name") == f"{plugin_name}.zip":
-                return f"{repo_url}/releases/latest/download/{plugin_name}.zip"
+                return asset.get("url")
         
         plugin_name_no_spaces = plugin_name.replace(" ", "")
         for asset in assets:
             if asset.get("name") == f"{plugin_name_no_spaces}.zip":
-                return f"{repo_url}/releases/latest/download/{plugin_name_no_spaces}.zip"
+                return asset.get("url")
 
         for asset in assets:
             asset_name = asset.get("name", "")
             if asset_name.endswith(".zip") and asset_name.startswith(f"{plugin_name}-"):
-                return f"{repo_url}/releases/latest/download/{asset_name}"
+                return asset.get("url")
 
         for asset in assets:
             if asset.get("name", "").endswith(".zip"):
-                asset_name = asset.get("name")
-                return f"{repo_url}/releases/latest/download/{asset_name}"
+                return asset.get("url")
 
         return None
 
     def _extract_manifest_from_url(self, zip_url: str, plugin_name: str, token: Optional[str] = None) -> Optional[Dict[str, Any]]:
         """Download ZIP file and extract plugin manifest."""
         try:
-            headers = {"Authorization": f"token {token}"} if token else {}
-            response = requests.get(zip_url, headers=headers, stream=True)
+            headers = {}
+            if token:
+                headers["Authorization"] = f"token {token}"
+                headers["Accept"] = "application/octet-stream"
+            
+            response = requests.get(zip_url, headers=headers, stream=True, allow_redirects=True)
             response.raise_for_status()
 
             temp_zip_path = Path(f"temp_{plugin_name}.zip")
