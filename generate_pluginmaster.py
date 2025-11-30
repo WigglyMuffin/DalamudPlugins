@@ -298,7 +298,7 @@ class RepositoryPluginProcessor:
                 print(f"No suitable ZIP asset found for {plugin_name} in {owner}/{repo}")
                 return None
 
-            manifest = self._extract_manifest_from_url(plugin_zip_url, plugin_name)
+            manifest = self._extract_manifest_from_url(plugin_zip_url, plugin_name, token)
             if manifest:
                 manifest["RepoUrl"] = repo_url
                 manifest["_repository_source"] = True
@@ -354,10 +354,11 @@ class RepositoryPluginProcessor:
 
         return None
 
-    def _extract_manifest_from_url(self, zip_url: str, plugin_name: str) -> Optional[Dict[str, Any]]:
+    def _extract_manifest_from_url(self, zip_url: str, plugin_name: str, token: Optional[str] = None) -> Optional[Dict[str, Any]]:
         """Download ZIP file and extract plugin manifest."""
         try:
-            response = requests.get(zip_url, stream=True)
+            headers = {"Authorization": f"token {token}"} if token else {}
+            response = requests.get(zip_url, headers=headers, stream=True)
             response.raise_for_status()
 
             temp_zip_path = Path(f"temp_{plugin_name}.zip")
