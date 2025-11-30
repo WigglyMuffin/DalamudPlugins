@@ -10,7 +10,7 @@
         "DownloadLinkUpdate": "https://github.com/WigglyMuffin/Questionable/releases/latest/download/latest.zip",
         "IconUrl": "https://raw.githubusercontent.com/WigglyMuffin/DalamudPlugins/main/icons/Questionable.png",
         "InternalName": "Questionable",
-        "LastUpdate": "1764506290",
+        "LastUpdate": "1764443284",
         "Name": "Questionable",
         "Punchline": "The actively maintained and improved quest helper plugin.",
         "RepoUrl": "https://github.com/WigglyMuffin/Questionable",
@@ -30,7 +30,7 @@
         "DownloadLinkUpdate": "https://github.com/WigglyMuffin/Influx/releases/latest/download/latest.zip",
         "IconUrl": "https://raw.githubusercontent.com/WigglyMuffin/DalamudPlugins/main/icons/Influx.png",
         "InternalName": "Influx",
-        "LastUpdate": "1764506290",
+        "LastUpdate": "1764427825",
         "Name": "Influx",
         "Punchline": "Sync game stats to InfluxDB or QuestDB",
         "RepoUrl": "https://github.com/WigglyMuffin/Influx"
