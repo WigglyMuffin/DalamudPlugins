@@ -135,21 +135,44 @@ class PluginProcessor:
         plugin_name = manifest["InternalName"]
         is_from_repository = manifest.get("_repository_source", False)
 
-        repo_download_url = self._get_repo_download_url(manifest)
-
-        if repo_download_url:
-            manifest["DownloadLinkInstall"] = repo_download_url
-            print(f"Using repository releases for {plugin_name}: {repo_download_url}")
+        # Check if we have a stored repository asset URL (for private repos or non-standard assets)
+        if "_repository_asset_url" in manifest:
+            asset_api_url = manifest["_repository_asset_url"]
+            repo_url = manifest.get("RepoUrl", "")
+            
+            # Extract asset ID from API URL and construct public download URL
+            # API URL format: https://api.github.com/repos/{owner}/{repo}/releases/assets/{id}
+            owner_repo = repo_url.replace("https://github.com/", "").rstrip("/")
+            
+            try:
+                token_name = manifest.get("_repository_token_name")
+                if token_name:
+                    token = os.environ.get(token_name)
+                    headers = {"Authorization": f"token {token}"}
+                    response = requests.get(asset_api_url, headers=headers)
+                    if response.status_code == 200:
+                        asset_info = response.json()
+                        asset_name = asset_info.get("name")
+                        if asset_name:
+                            manifest["DownloadLinkInstall"] = f"https://github.com/{owner_repo}/releases/latest/download/{asset_name}"
+                            print(f"Using repository releases for {plugin_name}: {manifest['DownloadLinkInstall']}")
+                        else:
+                            print(f"WARNING: Could not determine asset name for {plugin_name}")
+            except Exception as e:
+                print(f"Error resolving asset URL for {plugin_name}: {e}")
+        elif is_from_repository:
+            repo_download_url = self._get_repo_download_url(manifest)
+            if repo_download_url:
+                manifest["DownloadLinkInstall"] = repo_download_url
+                print(f"Using repository releases for {plugin_name}: {repo_download_url}")
+            else:
+                print(f"WARNING: Repository plugin {plugin_name} has no releases and no local files - skipping download links")
         elif not is_from_repository:
-            # Only use local fallback URLs for plugins that actually exist locally
             url_key = "global" if is_global else "main"
             manifest["DownloadLinkInstall"] = self.config.download_urls[url_key].format(
                 branch=self.config.branch, plugin_name=plugin_name
             )
             print(f"Using local files for {plugin_name}")
-        else:
-            # Repository plugin without releases - skip download link
-            print(f"WARNING: Repository plugin {plugin_name} has no releases and no local files - skipping download links")
 
         if "TestingAssemblyVersion" in manifest and not is_global:
             manifest["DownloadLinkTesting"] = self.config.download_urls["testing"].format(
@@ -302,6 +325,8 @@ class RepositoryPluginProcessor:
             if manifest:
                 manifest["RepoUrl"] = repo_url
                 manifest["_repository_source"] = True
+                manifest["_repository_asset_url"] = plugin_zip_url
+                manifest["_repository_token_name"] = token_name
                 if release_timestamp:
                     manifest["LastUpdate"] = release_timestamp
                 print(f"Successfully extracted manifest for {plugin_name} v{manifest.get('AssemblyVersion', 'unknown')}")
@@ -330,6 +355,11 @@ class RepositoryPluginProcessor:
         plugin_name_no_spaces = plugin_name.replace(" ", "")
         for asset in assets:
             if asset.get("name") == f"{plugin_name_no_spaces}.zip":
+                return asset.get("url")
+
+        plugin_name_dashes = plugin_name.replace(" ", "-")
+        for asset in assets:
+            if asset.get("name") == f"{plugin_name_dashes}.zip":
                 return asset.get("url")
 
         for asset in assets:
