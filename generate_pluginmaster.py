@@ -13,7 +13,7 @@ class Config:
     branch: str
     plugins_dir: Path
     output_file: Path
-    repository_list: Dict[str, str]
+    repository_list: Dict[str, Dict[str, str]]
     external_plugins: Dict[str, Dict[str, str]]
     download_urls: Dict[str, str]
     required_manifest_keys: List[str]
@@ -27,8 +27,14 @@ class Config:
         base_url = "https://github.com/WigglyMuffin/DalamudPlugins/raw/{branch}/plugins/{plugin_name}"
 
         repository_list = {
-            "Questionable": "https://github.com/WigglyMuffin/Questionable",
-            "Influx": "https://github.com/WigglyMuffin/Influx",
+            "Questionable": {
+                "url": "https://github.com/WigglyMuffin/Questionable",
+                "token": "GITHUB_TOKEN"
+            },
+            "Influx": {
+                "url": "https://github.com/WigglyMuffin/Influx",
+                "token": "GITHUB_TOKEN"
+            },
         }
 
         plugin_aliases = {}
@@ -216,23 +222,27 @@ class RepositoryPluginProcessor:
     
     def __init__(self, config: Config):
         self.config = config
-        self.github_token = os.environ.get("GITHUB_TOKEN")
-        self.headers = {"Authorization": f"token {self.github_token}"} if self.github_token else {}
+        self.tokens = {
+            "GITHUB_TOKEN": os.environ.get("GITHUB_TOKEN"),
+            "QSTC_FGPAT": os.environ.get("QSTC_FGPAT")
+        }
 
     def get_repository_plugins(self) -> List[Dict[str, Any]]:
         """Get plugin manifests from configured repositories."""
         manifests = []
 
-        for plugin_name, repo_url in self.config.repository_list.items():
-            print(f"Processing repository plugin: {plugin_name} from {repo_url}")
+        for plugin_name, repo_config in self.config.repository_list.items():
+            repo_url = repo_config["url"]
+            token_name = repo_config["token"]
+            print(f"Processing repository plugin: {plugin_name} from {repo_url} (using {token_name})")
             
-            repo_manifest = self._get_manifest_from_repository(plugin_name, repo_url)
+            repo_manifest = self._get_manifest_from_repository(plugin_name, repo_url, token_name)
             if repo_manifest:
                 manifests.append(repo_manifest)
 
         return manifests
 
-    def _get_manifest_from_repository(self, plugin_name: str, repo_url: str) -> Optional[Dict[str, Any]]:
+    def _get_manifest_from_repository(self, plugin_name: str, repo_url: str, token_name: str) -> Optional[Dict[str, Any]]:
         """Extract manifest from a GitHub repository's latest release."""
         try:
             repo_path = repo_url.replace("https://github.com/", "").rstrip("/")
@@ -243,7 +253,12 @@ class RepositoryPluginProcessor:
             owner, repo = repo_path.split("/", 1)
 
             api_url = f"https://api.github.com/repos/{owner}/{repo}/releases/latest"
-            response = requests.get(api_url, headers=self.headers)
+            
+            # Get the specified token
+            token = self.tokens.get(token_name)
+            headers = {"Authorization": f"token {token}"} if token else {}
+            
+            response = requests.get(api_url, headers=headers)
 
             if response.status_code == 404:
                 print(f"Repository {owner}/{repo} not found or private - skipping")
@@ -580,7 +595,8 @@ class PluginMasterGenerator:
             name_suffix = alias_config.get("name_suffix", " (Alternative)")
     
             repo_processor = RepositoryPluginProcessor(self.config)
-            manifest = repo_processor._get_manifest_from_repository(source_plugin, source_repo)
+            # For aliases, default to GITHUB_TOKEN
+            manifest = repo_processor._get_manifest_from_repository(source_plugin, source_repo, "GITHUB_TOKEN")
     
             if not manifest:
                 print(f"Could not fetch manifest for {source_plugin}, skipping alias {alias_name}")
