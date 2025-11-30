@@ -19,6 +19,7 @@ class Config:
     required_manifest_keys: List[str]
     field_duplicates: Dict[str, List[str]]
     plugin_aliases: Dict[str, Dict[str, Any]]
+    repo: str = "WigglyMuffin/DalamudPlugins"
     global_api_level: int = 13
 
     @classmethod
