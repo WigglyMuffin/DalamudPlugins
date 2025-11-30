@@ -34,5 +34,26 @@
         "Name": "Influx",
         "Punchline": "Sync game stats to InfluxDB or QuestDB",
         "RepoUrl": "https://github.com/WigglyMuffin/Influx"
+    },
+    {
+        "ApplicableVersion": "any",
+        "AssemblyVersion": "0.0.0.1",
+        "Author": "MacaronDream",
+        "DalamudApiLevel": 13,
+        "Description": "Automatically switches between characters based on quest completions and executes predefined sequences via Questionable integration. Use /qstcomp to open the main window.",
+        "DownloadCount": 0,
+        "InternalName": "QSTCompanion",
+        "LastUpdate": "1764498588",
+        "Name": "Questionable Companion",
+        "Punchline": "Automated character rotation and quest sequence execution",
+        "RepoUrl": "https://github.com/MacaronDream/Questionable-Companion",
+        "Tags": [
+            "automation",
+            "quests",
+            "Companion",
+            "character",
+            "rotation",
+            "questionable"
+        ]
     }
 ]
