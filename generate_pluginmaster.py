@@ -19,6 +19,7 @@ class Config:
     required_manifest_keys: List[str]
     field_duplicates: Dict[str, List[str]]
     plugin_aliases: Dict[str, Dict[str, Any]]
+    global_api_level: int = 13
 
     @classmethod
     def load_default(cls) -> 'Config':
@@ -115,7 +116,7 @@ class PluginProcessor:
         if global_zip.exists():
             global_manifest = self.extract_manifest_from_zip(global_zip, plugin_name)
             if global_manifest:
-                global_manifest["Name"] = f"{global_manifest['Name']} (API13)"
+                global_manifest["Name"] = f"{global_manifest['Name']} (API{self.config.global_api_level})"
                 manifests.append(global_manifest)
 
         return manifests
@@ -126,20 +127,25 @@ class PluginProcessor:
 
     def add_download_links(self, manifest: Dict[str, Any]) -> None:
         """Add download links and other computed fields to manifest."""
-        is_global = manifest["Name"].endswith("(API13)")
+        is_global = manifest["Name"].endswith(f"(API{self.config.global_api_level})")
         plugin_name = manifest["InternalName"]
+        is_from_repository = manifest.get("_repository_source", False)
 
         repo_download_url = self._get_repo_download_url(manifest)
 
         if repo_download_url:
             manifest["DownloadLinkInstall"] = repo_download_url
             print(f"Using repository releases for {plugin_name}: {repo_download_url}")
-        else:
+        elif not is_from_repository:
+            # Only use local fallback URLs for plugins that actually exist locally
             url_key = "global" if is_global else "main"
             manifest["DownloadLinkInstall"] = self.config.download_urls[url_key].format(
                 branch=self.config.branch, plugin_name=plugin_name
             )
             print(f"Using local files for {plugin_name}")
+        else:
+            # Repository plugin without releases - skip download link
+            print(f"WARNING: Repository plugin {plugin_name} has no releases and no local files - skipping download links")
 
         if "TestingAssemblyVersion" in manifest and not is_global:
             manifest["DownloadLinkTesting"] = self.config.download_urls["testing"].format(
@@ -750,7 +756,7 @@ class PluginMasterGenerator:
 
     def _set_local_timestamp(self, manifest: Dict[str, Any], plugin_name: str) -> None:
         """Set timestamp from local file modification time."""
-        is_global = manifest["Name"].endswith("(API13)")
+        is_global = manifest["Name"].endswith(f"(API{self.config.global_api_level})")
         
         if is_global:
             zip_path = self.config.plugins_dir / plugin_name / "global" / "latest.zip"
