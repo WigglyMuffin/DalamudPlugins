@@ -19,9 +19,15 @@ jobs:
       - uses: actions/setup-python@v4
         with:
           python-version: "3.8"
+      - name: Debug Secrets
+        run: |
+          echo "QSTC_FGPAT is set: $([[ -n "$QSTC_FGPAT" ]] && echo "yes" || echo "no")"
+        env:
+          QSTC_FGPAT: ${{ secrets.QSTC_FGPAT }}
       - name: Generate PluginMaster
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          QSTC_FGPAT: ${{ secrets.QSTC_FGPAT }}
         run: |
           pip install -r requirements.txt
           python generate_pluginmaster.py

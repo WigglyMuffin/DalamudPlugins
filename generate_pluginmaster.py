@@ -242,13 +242,17 @@ class RepositoryPluginProcessor:
         manifests = []
 
         for plugin_name, repo_config in self.config.repository_list.items():
-            repo_url = repo_config["url"]
-            token_name = repo_config["token"]
-            print(f"Processing repository plugin: {plugin_name} from {repo_url} (using {token_name})")
-            
-            repo_manifest = self._get_manifest_from_repository(plugin_name, repo_url, token_name)
-            if repo_manifest:
-                manifests.append(repo_manifest)
+            try:
+                repo_url = repo_config["url"]
+                token_name = repo_config["token"]
+                print(f"Processing repository plugin: {plugin_name} from {repo_url} (using {token_name})")
+                
+                repo_manifest = self._get_manifest_from_repository(plugin_name, repo_url, token_name)
+                if repo_manifest:
+                    manifests.append(repo_manifest)
+            except Exception as e:
+                print(f"Unexpected error processing {plugin_name}: {e}")
+                print(f"Skipping {plugin_name} and continuing with other plugins...")
 
         return manifests
 
@@ -571,16 +575,23 @@ class PluginMasterGenerator:
         manifests = self._collect_manifests_with_priority()
 
         for manifest in manifests:
-            self.processor.add_download_links(manifest)
+            try:
+                self.processor.add_download_links(manifest)
+            except Exception as e:
+                print(f"Error adding download links for {manifest.get('InternalName', 'unknown')}: {e}")
+                print(f"Plugin may have incomplete download information")
 
         print("Updating download counts...")
         self.download_updater.update_download_counts(manifests)
     
         for manifest in manifests:
-            plugin_name = manifest.get("InternalName")
-            if manifest.get("DownloadCount", 0) == 0 and plugin_name in self.existing_download_counts:
-                manifest["DownloadCount"] = self.existing_download_counts[plugin_name]
-                print(f"Using cached download count for {plugin_name}: {manifest['DownloadCount']}")
+            try:
+                plugin_name = manifest.get("InternalName")
+                if manifest.get("DownloadCount", 0) == 0 and plugin_name in self.existing_download_counts:
+                    manifest["DownloadCount"] = self.existing_download_counts[plugin_name]
+                    print(f"Using cached download count for {plugin_name}: {manifest['DownloadCount']}")
+            except Exception as e:
+                print(f"Error updating download count for {manifest.get('InternalName', 'unknown')}: {e}")
 
         self._update_last_modified(manifests)
 
@@ -656,28 +667,36 @@ class PluginMasterGenerator:
         repo_manifests = self.repo_processor.get_repository_plugins()
 
         for manifest in repo_manifests:
-            plugin_name = manifest.get("InternalName")
-            if plugin_name:
-                local_manifest = self._get_local_manifest(plugin_name)
-                
-                if local_manifest:
-                    chosen_manifest = self._choose_better_manifest(repo_manifest=manifest, local_manifest=local_manifest, plugin_name=plugin_name)
-                    manifests.append(chosen_manifest)
-                else:
-                    print(f"Using repository version for {plugin_name} (no local version found)")
-                    manifests.append(manifest)
+            try:
+                plugin_name = manifest.get("InternalName")
+                if plugin_name:
+                    local_manifest = self._get_local_manifest(plugin_name)
+                    
+                    if local_manifest:
+                        chosen_manifest = self._choose_better_manifest(repo_manifest=manifest, local_manifest=local_manifest, plugin_name=plugin_name)
+                        manifests.append(chosen_manifest)
+                    else:
+                        print(f"Using repository version for {plugin_name} (no local version found)")
+                        manifests.append(manifest)
 
-                processed_plugins.add(plugin_name)
+                    processed_plugins.add(plugin_name)
+            except Exception as e:
+                print(f"Error processing manifest for {manifest.get('InternalName', 'unknown')}: {e}")
+                print(f"Continuing with remaining plugins...")
 
         print("Processing remaining local plugins...")
         local_manifests = self._collect_local_manifests()
         
         for manifest in local_manifests:
-            plugin_name = manifest.get("InternalName")
-            if plugin_name and plugin_name not in processed_plugins:
-                print(f"Using local version for {plugin_name} (not in repository list)")
-                manifests.append(manifest)
-                processed_plugins.add(plugin_name)
+            try:
+                plugin_name = manifest.get("InternalName")
+                if plugin_name and plugin_name not in processed_plugins:
+                    print(f"Using local version for {plugin_name} (not in repository list)")
+                    manifests.append(manifest)
+                    processed_plugins.add(plugin_name)
+            except Exception as e:
+                print(f"Error processing local manifest for {manifest.get('InternalName', 'unknown')}: {e}")
+                print(f"Continuing with remaining plugins...")
 
         return manifests
 
@@ -740,18 +759,19 @@ class PluginMasterGenerator:
             json.dump(manifests, f, indent=4, ensure_ascii=False, sort_keys=True)
 
     def _update_last_modified(self, manifests: List[Dict[str, Any]]) -> None:
-        """Update LastUpdate timestamps based on file modification times or repository release dates."""
+        """Update LastUpdate timestamps to current time for all plugins."""
+        import time
+        current_timestamp = str(int(time.time()))
+        
         for manifest in manifests:
             try:
-                if manifest.get("_repository_source"):
-                    if "LastUpdate" in manifest:
-                        print(f"Preserving GitHub release timestamp for {manifest['InternalName']}: {manifest['LastUpdate']}")
-                        del manifest["_repository_source"]
-                    else:
-                        del manifest["_repository_source"]
-                        self._set_local_timestamp(manifest, manifest["InternalName"])
-                else:
-                    self._set_local_timestamp(manifest, manifest["InternalName"])
+                # Remove the repository source flag if present
+                if "_repository_source" in manifest:
+                    del manifest["_repository_source"]
+                
+                # Always set to current timestamp to ensure file updates
+                manifest["LastUpdate"] = current_timestamp
+                print(f"Set current timestamp for {manifest['InternalName']}: {current_timestamp}")
 
             except Exception as e:
                 print(f"Error updating last modified time for {manifest.get('InternalName', 'unknown')}: {e}")
