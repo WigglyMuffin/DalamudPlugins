@@ -184,6 +184,12 @@ class PluginProcessor:
                 if src in manifest and target not in manifest:
                     manifest[target] = manifest[src]
 
+        if "IconUrl" not in manifest or not manifest["IconUrl"]:
+            icon_path = Path("icons") / f"{plugin_name}.png"
+            if icon_path.exists():
+                manifest["IconUrl"] = f"https://raw.githubusercontent.com/{self.config.repo}/main/icons/{plugin_name}.png"
+                print(f"Added icon URL for {plugin_name}")
+
         manifest["DownloadCount"] = 0
 
     def _get_repo_download_url(self, manifest: Dict[str, Any]) -> Optional[str]:
