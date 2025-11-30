@@ -38,7 +38,7 @@ class Config:
             },
             "Questionable Companion": {
                 "url": "https://github.com/MacaronDream/Questionable-Companion",
-                "token": "MATS_FGPAT"
+                "token": "QSTC_FGPAT"
             },
         }
 
