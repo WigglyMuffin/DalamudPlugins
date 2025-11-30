@@ -37,8 +37,8 @@ class Config:
                 "token": "GITHUB_TOKEN"
             },
             "Questionable Companion": {
-                "url": "https://github.com/MacaronDream/Questionable-Companion",
-                "token": "QSTC_FGPAT"
+                "url": "https://github.com/MacaronDream/QSTCompanion",
+                "token": "GITHUB_TOKEN"
             },
         }
 
