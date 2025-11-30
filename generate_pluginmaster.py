@@ -316,6 +316,8 @@ class RepositoryPluginProcessor:
     def _find_plugin_asset(self, release_data: Dict[str, Any], plugin_name: str) -> Optional[str]:
         """Find the best plugin ZIP asset from release assets."""
         assets = release_data.get("assets", [])
+        
+        print(f"Available assets for {plugin_name}: {[asset.get('name') for asset in assets]}")
 
         repo_info = release_data.get("html_url", "")
         if "/releases/tag/" in repo_info:
@@ -334,6 +336,11 @@ class RepositoryPluginProcessor:
         for asset in assets:
             if asset.get("name") == f"{plugin_name}.zip":
                 return f"{repo_url}/releases/latest/download/{plugin_name}.zip"
+        
+        plugin_name_no_spaces = plugin_name.replace(" ", "")
+        for asset in assets:
+            if asset.get("name") == f"{plugin_name_no_spaces}.zip":
+                return f"{repo_url}/releases/latest/download/{plugin_name_no_spaces}.zip"
 
         for asset in assets:
             asset_name = asset.get("name", "")
