@@ -44,6 +44,7 @@
         "DownloadCount": 0,
         "DownloadLinkInstall": "https://github.com/MacaronDream/QSTCompanion/releases/latest/download/QSTCompanion.zip",
         "DownloadLinkUpdate": "https://github.com/MacaronDream/QSTCompanion/releases/latest/download/QSTCompanion.zip",
+        "IconUrl": "https://raw.githubusercontent.com/WigglyMuffin/DalamudPlugins/main/icons/QSTCompanion.png",
         "InternalName": "QSTCompanion",
         "LastUpdate": "1764508040",
         "Name": "Questionable Companion",
