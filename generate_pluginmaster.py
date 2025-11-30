@@ -36,6 +36,10 @@ class Config:
                 "url": "https://github.com/WigglyMuffin/Influx",
                 "token": "GITHUB_TOKEN"
             },
+            "Questionable Companion": {
+                "url": "https://github.com/MacaronDream/Questionable-Companion",
+                "token": "MATS_FGPAT"
+            },
         }
 
         plugin_aliases = {}
