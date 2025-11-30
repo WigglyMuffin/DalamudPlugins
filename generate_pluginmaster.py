@@ -374,9 +374,9 @@ class RepositoryPluginProcessor:
                         f"{actual_plugin_name.replace(' ', '-')}.json",  # Dashes instead of spaces
                     ]
                     
-                    # Also check all JSON files in the ZIP
+                    # Also check all JSON files in the ZIP (excluding .deps.json files)
                     all_files = z.namelist()
-                    json_files = [f for f in all_files if f.endswith('.json') and '/' not in f]
+                    json_files = [f for f in all_files if f.endswith('.json') and '/' not in f and not f.endswith('.deps.json')]
                     
                     manifest_file = None
                     for candidate in manifest_candidates:
@@ -384,7 +384,7 @@ class RepositoryPluginProcessor:
                             manifest_file = candidate
                             break
                     
-                    # If no match, try the first JSON file at root level
+                    # If no match, try the first JSON file at root level (excluding .deps.json)
                     if not manifest_file and json_files:
                         manifest_file = json_files[0]
                         print(f"Using manifest file: {manifest_file}")
