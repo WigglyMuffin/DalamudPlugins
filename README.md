@@ -13,7 +13,6 @@
   - MSQ and quest automation support
 - **Note**: Not all quests are supported, check Discord for support.
 - **Required Dependencies**: [vnavmesh](https://github.com/awgil/ffxiv_navmesh/), [Lifestream](https://github.com/NightmareXIV/Lifestream), [TextAdvance](https://github.com/NightmareXIV/TextAdvance)
-- **Repository**: [Questionable](https://github.com/WigglyMuffin/Questionable)
 
 ### Influx
 - **Author**: WigglyMuffin
@@ -23,7 +22,6 @@
   - InfluxDB integration
   - QuestDB integration
   - Grafana visualization support
-- **Repository**: [Influx](https://github.com/WigglyMuffin/Influx)
 
 ## Installation
 
