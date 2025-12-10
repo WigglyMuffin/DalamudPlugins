@@ -36,6 +36,7 @@
   - InfluxDB integration
   - QuestDB integration
   - Grafana visualization support
+- **Required Dependencies**: [AllaganTools](https://github.com/Critical-Impact/InventoryTools)
 
 ## Installation
 
