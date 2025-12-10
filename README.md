@@ -13,6 +13,20 @@
   - MSQ and quest automation support
 - **Note**: Not all quests are supported, check Discord for support.
 - **Required Dependencies**: [vnavmesh](https://github.com/awgil/ffxiv_navmesh/), [Lifestream](https://github.com/NightmareXIV/Lifestream), [TextAdvance](https://github.com/NightmareXIV/TextAdvance)
+- **Recommended**: For the best experience, use with our partnered **Questionable Companion** plugin (see below)
+
+### Questionable Companion
+- **Author**: MacaronDream
+- **Description**: Automated character rotation and quest sequence execution for Questionable. Automates multi-character MSQ progression by intelligently switching between characters based on quest completion and level requirements.
+- **Features**:
+  - Automatic character switching and quest tracking
+  - MSQ progression monitoring across all characters
+  - Allied Society quest rotation and prioritization
+  - Event quest automation with prerequisite checking
+  - Chauffeur Mode for following main character through quests
+  - Data Center travel automation
+  - Stop point configuration for controlled progression
+- **Required Dependencies**: [Questionable](https://github.com/WigglyMuffin/Questionable/), [AutoRetainer](https://github.com/PunishXIV/AutoRetainer)
 
 ### Influx
 - **Author**: WigglyMuffin
