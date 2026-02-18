@@ -1,6 +1,11 @@
 name: Regenerate PluginMaster
 on:
   workflow_dispatch:
+    inputs:
+      trigger_source:
+        description: 'Source that triggered this run'
+        required: false
+        default: 'manual'
   repository_dispatch:
     types: [regenerate]
   push:
