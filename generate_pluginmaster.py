@@ -176,9 +176,12 @@ class PluginProcessor:
             print(f"Using local files for {plugin_name}")
 
         if "TestingAssemblyVersion" in manifest and not is_global:
-            manifest["DownloadLinkTesting"] = self.config.download_urls["testing"].format(
-                branch=self.config.branch, plugin_name=plugin_name
-            )
+            if "_testing_download_url" in manifest:
+                manifest["DownloadLinkTesting"] = manifest.pop("_testing_download_url")
+            else:
+                manifest["DownloadLinkTesting"] = self.config.download_urls["testing"].format(
+                    branch=self.config.branch, plugin_name=plugin_name
+                )
 
         for src, targets in self.config.field_duplicates.items():
             for target in targets:
@@ -336,6 +339,14 @@ class RepositoryPluginProcessor:
                 manifest["_repository_token_name"] = token_name
                 if release_timestamp:
                     manifest["LastUpdate"] = release_timestamp
+
+                # Check for testing pre-release
+                testing_info = self._get_testing_release_info(owner, repo, plugin_name, token)
+                if testing_info:
+                    manifest["TestingAssemblyVersion"] = testing_info["version"]
+                    manifest["_testing_download_url"] = testing_info["download_url"]
+                    print(f"Found testing release for {plugin_name}: v{testing_info['version']}")
+
                 print(f"Successfully extracted manifest for {plugin_name} v{manifest.get('AssemblyVersion', 'unknown')}")
                 return manifest
 
@@ -379,6 +390,41 @@ class RepositoryPluginProcessor:
                 return asset.get("url")
 
         return None
+
+    def _get_testing_release_info(self, owner: str, repo: str, plugin_name: str, token: Optional[str] = None) -> Optional[Dict[str, Any]]:
+        """Fetch testing pre-release info (version and download URL) from a repository."""
+        try:
+            api_url = f"https://api.github.com/repos/{owner}/{repo}/releases"
+            headers = {"Authorization": f"token {token}"} if token else {}
+
+            response = requests.get(api_url, headers=headers, params={"per_page": 30})
+            if response.status_code != 200:
+                return None
+
+            releases = response.json()
+
+            # Find the latest pre-release tagged testing-v*
+            for release in releases:
+                if release.get("prerelease") and release.get("tag_name", "").startswith("testing-v"):
+                    testing_version = release["tag_name"].replace("testing-v", "")
+                    tag_name = release["tag_name"]
+
+                    # Find a downloadable zip asset
+                    for asset in release.get("assets", []):
+                        if asset.get("name") == "latest.zip":
+                            download_url = f"https://github.com/{owner}/{repo}/releases/download/{tag_name}/latest.zip"
+                            return {"version": testing_version, "download_url": download_url}
+
+                    for asset in release.get("assets", []):
+                        if asset.get("name", "").endswith(".zip"):
+                            download_url = f"https://github.com/{owner}/{repo}/releases/download/{tag_name}/{asset['name']}"
+                            return {"version": testing_version, "download_url": download_url}
+
+            return None
+
+        except Exception as e:
+            print(f"Error fetching testing release for {owner}/{repo}: {e}")
+            return None
 
     def _extract_manifest_from_url(self, zip_url: str, plugin_name: str, token: Optional[str] = None) -> Optional[Dict[str, Any]]:
         """Download ZIP file and extract plugin manifest."""
@@ -571,35 +617,48 @@ class DownloadCountUpdater:
         return None, None
 
     def _fetch_download_count(self, owner: str, repo: str) -> int:
-        """Fetch total download count for a GitHub repository."""
+        """Fetch total download count for a GitHub repository (with pagination)."""
         try:
             api_url = f"https://api.github.com/repos/{owner}/{repo}/releases"
             print(f"Fetching download counts for {owner}/{repo}")
 
-            response = requests.get(api_url, headers=self.headers)
-
-            if response.status_code == 404:
-                print(f"Repository {owner}/{repo} not found or is private - skipping download count")
-                return 0
-            elif response.status_code == 403:
-                print(f"Access forbidden for {owner}/{repo} (rate limited or private) - skipping download count")
-                return 0
-            elif response.status_code == 401:
-                print(f"Authentication required for {owner}/{repo} - skipping download count")
-                return 0
-
-            response.raise_for_status()
-
-            releases = response.json()
-
-            if not releases:
-                print(f"Repository {owner}/{repo} has no releases")
-                return 0
-
             total_downloads = 0
-            for release in releases:
-                for asset in release.get("assets", []):
-                    total_downloads += asset.get("download_count", 0)
+            page = 1
+
+            while True:
+                response = requests.get(
+                    api_url,
+                    headers=self.headers,
+                    params={"per_page": 100, "page": page}
+                )
+
+                if response.status_code == 404:
+                    print(f"Repository {owner}/{repo} not found or is private - skipping download count")
+                    return 0
+                elif response.status_code == 403:
+                    print(f"Access forbidden for {owner}/{repo} (rate limited or private) - skipping download count")
+                    return 0
+                elif response.status_code == 401:
+                    print(f"Authentication required for {owner}/{repo} - skipping download count")
+                    return 0
+
+                response.raise_for_status()
+                releases = response.json()
+
+                if not releases:
+                    break
+
+                for release in releases:
+                    for asset in release.get("assets", []):
+                        total_downloads += asset.get("download_count", 0)
+
+                if len(releases) < 100:
+                    break
+                page += 1
+
+            if total_downloads == 0:
+                print(f"Repository {owner}/{repo} has no releases or no downloads")
+
             return total_downloads
 
         except requests.exceptions.RequestException as e:
