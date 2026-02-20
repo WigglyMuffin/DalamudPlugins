@@ -31,26 +31,11 @@ class Config:
         Falls back to hardcoded defaults if file missing or broken.
         """
         default_output_files = {"default": Path("./pluginmaster.json")}
-        default_repository_list = {
-            "Questionable": {
-                "url": "https://github.com/WigglyMuffin/Questionable",
-                "token": "GITHUB_TOKEN"
-            },
-            "Influx": {
-                "url": "https://github.com/WigglyMuffin/Influx",
-                "token": "GITHUB_TOKEN"
-            },
-            "Questionable Companion": {
-                "url": "https://github.com/MacaronDream/QSTCompanion",
-                "token": "GITHUB_TOKEN"
-            },
-        }
-        default_plugin_outputs = {name: "default" for name in default_repository_list}
 
         sources_path = Path("./plugin-sources.json")
         if not sources_path.exists():
-            print("plugin-sources.json not found, using hardcoded defaults")
-            return default_output_files, default_repository_list, default_plugin_outputs
+            print("plugin-sources.json not found, no repository plugins will be processed")
+            return default_output_files, {}, {}
 
         try:
             with open(sources_path, 'r', encoding='utf-8') as f:
@@ -74,16 +59,12 @@ class Config:
                 }
                 plugin_outputs[plugin_name] = plugin_config.get("output", "default")
 
-            if not repository_list:
-                print("No enabled plugins in plugin-sources.json, using hardcoded defaults")
-                return default_output_files, default_repository_list, default_plugin_outputs
-
             print(f"Loaded {len(repository_list)} plugins from plugin-sources.json with {len(output_files)} output(s)")
             return output_files, repository_list, plugin_outputs
 
         except Exception as e:
-            print(f"Error loading plugin-sources.json: {e}, using hardcoded defaults")
-            return default_output_files, default_repository_list, default_plugin_outputs
+            print(f"Error loading plugin-sources.json: {e}, no repository plugins will be processed")
+            return default_output_files, {}, {}
 
     @classmethod
     def load_default(cls) -> 'Config':
