@@ -5,25 +5,25 @@
   "plugins": {
     "Questionable": {
       "url": "https://github.com/WigglyMuffin/Questionable",
-      "token": "GITHUB_TOKEN",
+      "token": "PLUGIN_PAT",
       "enabled": true,
       "output": "default"
     },
     "Influx": {
       "url": "https://github.com/WigglyMuffin/Influx",
-      "token": "GITHUB_TOKEN",
+      "token": "PLUGIN_PAT",
       "enabled": true,
       "output": "default"
     },
     "Questionable Companion": {
       "url": "https://github.com/MacaronDream/QSTCompanion",
-      "token": "GITHUB_TOKEN",
+      "token": "PLUGIN_PAT",
       "enabled": true,
       "output": "default"
     },
     "test-repo": {
       "url": "https://github.com/WigglyCorp/test-repo",
-      "token": "GITHUB_TOKEN",
+      "token": "PLUGIN_PAT",
       "enabled": true,
       "output": "default"
     }

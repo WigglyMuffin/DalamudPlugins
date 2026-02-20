@@ -34,13 +34,13 @@ jobs:
       - name: Debug Secrets
         if: runner.debug == '1'
         run: |
-          echo "QSTC_FGPAT is set: $([[ -n "$QSTC_FGPAT" ]] && echo "yes" || echo "no")"
+          echo "PLUGIN_PAT is set: $([[ -n "$PLUGIN_PAT" ]] && echo "yes" || echo "no")"
         env:
-          QSTC_FGPAT: ${{ secrets.QSTC_FGPAT }}
+          PLUGIN_PAT: ${{ secrets.PLUGIN_PAT }}
       - name: Generate PluginMaster
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          QSTC_FGPAT: ${{ secrets.QSTC_FGPAT }}
+          PLUGIN_PAT: ${{ secrets.PLUGIN_PAT }}
         run: |
           pip install -r requirements.txt
           python generate_pluginmaster.py
