@@ -4,7 +4,7 @@ import requests
 from pathlib import Path
 from zipfile import ZipFile
 from typing import Dict, List, Optional, Any, Tuple
-from dataclasses import dataclass, asdict
+from dataclasses import dataclass
 
 
 @dataclass
@@ -12,7 +12,8 @@ class Config:
     """Configuration settings for the plugin master generator."""
     branch: str
     plugins_dir: Path
-    output_file: Path
+    output_files: Dict[str, Path]
+    plugin_outputs: Dict[str, str]
     repository_list: Dict[str, Dict[str, str]]
     external_plugins: Dict[str, Dict[str, str]]
     download_urls: Dict[str, str]
@@ -23,12 +24,14 @@ class Config:
     global_api_level: int = 13
 
     @classmethod
-    def load_default(cls) -> 'Config':
-        """Load default configuration."""
-        branch = os.environ.get("GITHUB_REF", "main").split("refs/heads/")[-1]
-        base_url = "https://github.com/WigglyMuffin/DalamudPlugins/raw/{branch}/plugins/{plugin_name}"
+    def _load_plugin_sources(cls) -> Tuple[Dict[str, Path], Dict[str, Dict[str, str]], Dict[str, str]]:
+        """Load plugin sources from plugin-sources.json if it exists.
 
-        repository_list = {
+        Returns (output_files, repository_list, plugin_outputs).
+        Falls back to hardcoded defaults if file missing or broken.
+        """
+        default_output_files = {"default": Path("./pluginmaster.json")}
+        default_repository_list = {
             "Questionable": {
                 "url": "https://github.com/WigglyMuffin/Questionable",
                 "token": "GITHUB_TOKEN"
@@ -42,22 +45,61 @@ class Config:
                 "token": "GITHUB_TOKEN"
             },
         }
+        default_plugin_outputs = {name: "default" for name in default_repository_list}
+
+        sources_path = Path("./plugin-sources.json")
+        if not sources_path.exists():
+            print("plugin-sources.json not found, using hardcoded defaults")
+            return default_output_files, default_repository_list, default_plugin_outputs
+
+        try:
+            with open(sources_path, 'r', encoding='utf-8') as f:
+                sources = json.load(f)
+
+            output_files = {}
+            for key, filename in sources.get("outputs", {}).items():
+                output_files[key] = Path(f"./{filename}")
+            if not output_files:
+                output_files = default_output_files
+
+            repository_list = {}
+            plugin_outputs = {}
+            for plugin_name, plugin_config in sources.get("plugins", {}).items():
+                if not plugin_config.get("enabled", True):
+                    print(f"Skipping disabled plugin: {plugin_name}")
+                    continue
+                repository_list[plugin_name] = {
+                    "url": plugin_config["url"],
+                    "token": plugin_config.get("token", "GITHUB_TOKEN")
+                }
+                plugin_outputs[plugin_name] = plugin_config.get("output", "default")
+
+            if not repository_list:
+                print("No enabled plugins in plugin-sources.json, using hardcoded defaults")
+                return default_output_files, default_repository_list, default_plugin_outputs
+
+            print(f"Loaded {len(repository_list)} plugins from plugin-sources.json with {len(output_files)} output(s)")
+            return output_files, repository_list, plugin_outputs
+
+        except Exception as e:
+            print(f"Error loading plugin-sources.json: {e}, using hardcoded defaults")
+            return default_output_files, default_repository_list, default_plugin_outputs
+
+    @classmethod
+    def load_default(cls) -> 'Config':
+        """Load default configuration."""
+        branch = os.environ.get("GITHUB_REF", "main").split("refs/heads/")[-1]
+        base_url = "https://github.com/WigglyMuffin/DalamudPlugins/raw/{branch}/plugins/{plugin_name}"
+
+        output_files, repository_list, plugin_outputs = cls._load_plugin_sources()
 
         plugin_aliases = {}
-        # Disabled for now
-        # plugin_aliases = {
-        #     "QuestionablePlus": {
-        #         "source": "Questionable",
-        #         "source_repo": "https://github.com/WigglyMuffin/Questionable",
-        #         "output_file": "repo.json",
-        #         "name_suffix": " Plus"
-        #     }
-        # }
 
         return cls(
             branch=branch,
             plugins_dir=Path("./plugins"),
-            output_file=Path("./pluginmaster.json"),
+            output_files=output_files,
+            plugin_outputs=plugin_outputs,
             repository_list=repository_list,
             external_plugins={},
             download_urls={
@@ -707,9 +749,18 @@ class PluginMasterGenerator:
 
         self._update_last_modified(manifests)
 
+        # Preserve output routing through trim
+        output_routing = {}
+        for m in manifests:
+            output_routing[m.get("InternalName")] = m.get("_output_name", "default")
+
         manifests = [self.processor.trim_manifest(m) for m in manifests]
 
-        print("Writing main plugin master file...")
+        # Re-attach output routing after trim
+        for m in manifests:
+            m["_output_name"] = output_routing.get(m.get("InternalName"), "default")
+
+        print("Writing plugin master file(s)...")
         self._write_plugin_master(manifests)
 
         print("Generating alias plugin master files...")
@@ -756,19 +807,20 @@ class PluginMasterGenerator:
             print(f"Successfully generated {output_file} for {alias_name}")
 
     def _load_existing_download_counts(self) -> None:
-        """Load download counts from existing pluginmaster.json if it exists."""
-        if self.config.output_file.exists():
-            try:
-                with open(self.config.output_file, 'r', encoding='utf-8') as f:
-                    existing_data = json.load(f)
-                    for plugin in existing_data:
-                        plugin_name = plugin.get("InternalName")
-                        download_count = plugin.get("DownloadCount", 0)
-                        if plugin_name:
-                            self.existing_download_counts[plugin_name] = download_count
-                print(f"Loaded existing download counts for {len(self.existing_download_counts)} plugins")
-            except Exception as e:
-                print(f"Could not load existing download counts: {e}")
+        """Load download counts from existing output files if they exist."""
+        for output_name, output_path in self.config.output_files.items():
+            if output_path.exists():
+                try:
+                    with open(output_path, 'r', encoding='utf-8') as f:
+                        existing_data = json.load(f)
+                        for plugin in existing_data:
+                            plugin_name = plugin.get("InternalName")
+                            download_count = plugin.get("DownloadCount", 0)
+                            if plugin_name:
+                                self.existing_download_counts[plugin_name] = download_count
+                    print(f"Loaded existing download counts from {output_path} ({output_name})")
+                except Exception as e:
+                    print(f"Could not load existing download counts from {output_path}: {e}")
 
     def _collect_manifests_with_priority(self) -> List[Dict[str, Any]]:
         """Collect plugin manifests with repository-first priority system."""
@@ -782,7 +834,7 @@ class PluginMasterGenerator:
             plugin_name = manifest.get("InternalName")
             if plugin_name:
                 local_manifest = self._get_local_manifest(plugin_name)
-                
+
                 if local_manifest:
                     chosen_manifest = self._choose_better_manifest(repo_manifest=manifest, local_manifest=local_manifest, plugin_name=plugin_name)
                     manifests.append(chosen_manifest)
@@ -794,13 +846,21 @@ class PluginMasterGenerator:
 
         print("Processing remaining local plugins...")
         local_manifests = self._collect_local_manifests()
-        
+
         for manifest in local_manifests:
             plugin_name = manifest.get("InternalName")
             if plugin_name and plugin_name not in processed_plugins:
                 print(f"Using local version for {plugin_name} (not in repository list)")
                 manifests.append(manifest)
                 processed_plugins.add(plugin_name)
+
+        # Attach output routing metadata
+        for manifest in manifests:
+            plugin_name = manifest.get("Name", "")
+            internal_name = manifest.get("InternalName", "")
+            # Check by Name first (matches plugin-sources.json keys), then InternalName
+            output_name = self.config.plugin_outputs.get(plugin_name) or self.config.plugin_outputs.get(internal_name, "default")
+            manifest["_output_name"] = output_name
 
         return manifests
 
@@ -857,10 +917,23 @@ class PluginMasterGenerator:
             print(f"Could not parse versions for {plugin_name}, prioritising repository")
             return repo_manifest
 
-    def _write_plugin_master(self, manifests: List[Dict[str, Any]]) -> None:
-        """Write the plugin master JSON file."""
-        with open(self.config.output_file, 'w', encoding='utf-8') as f:
-            json.dump(manifests, f, indent=4, ensure_ascii=False, sort_keys=True)
+    def _write_plugin_master(self, manifests: List[Dict[str, Any]], final: bool = True) -> None:
+        """Write plugin master JSON file(s), grouped by output routing."""
+        # Group manifests by output name
+        grouped: Dict[str, List[Dict[str, Any]]] = {name: [] for name in self.config.output_files}
+        for m in manifests:
+            output_name = m.get("_output_name", "default")
+            if output_name not in grouped:
+                output_name = "default"
+            # Only pop _output_name on final write
+            clean = {k: v for k, v in m.items() if k != "_output_name"} if final else dict(m)
+            grouped.setdefault(output_name, []).append(clean)
+
+        for output_name, output_path in self.config.output_files.items():
+            output_manifests = grouped.get(output_name, [])
+            with open(output_path, 'w', encoding='utf-8') as f:
+                json.dump(output_manifests, f, indent=4, ensure_ascii=False, sort_keys=True)
+            print(f"Wrote {len(output_manifests)} plugins to {output_path} ({output_name})")
 
     def _update_last_modified(self, manifests: List[Dict[str, Any]]) -> None:
         """Update LastUpdate timestamps based on file modification times or repository release dates."""
@@ -879,7 +952,7 @@ class PluginMasterGenerator:
             except Exception as e:
                 print(f"Error updating last modified time for {manifest.get('InternalName', 'unknown')}: {e}")
 
-        self._write_plugin_master(manifests)
+        self._write_plugin_master(manifests, final=False)
 
     def _set_local_timestamp(self, manifest: Dict[str, Any], plugin_name: str) -> None:
         """Set timestamp from local file modification time."""
