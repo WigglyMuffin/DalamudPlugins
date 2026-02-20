@@ -426,22 +426,32 @@ class RepositoryPluginProcessor:
 
             releases = response.json()
 
-            # Find the latest pre-release tagged testing-v*
+            # Find the latest pre-release.
+            # Supports two tag formats:
+            #   - Legacy: testing-v1.2.3 (old workflow style)
+            #   - Current: v1.2.3 with prerelease=true (new workflow style)
             for release in releases:
-                if release.get("prerelease") and release.get("tag_name", "").startswith("testing-v"):
-                    testing_version = release["tag_name"].replace("testing-v", "")
-                    tag_name = release["tag_name"]
+                if not release.get("prerelease"):
+                    continue
 
-                    # Find a downloadable zip asset
-                    for asset in release.get("assets", []):
-                        if asset.get("name") == "latest.zip":
-                            download_url = f"https://github.com/{owner}/{repo}/releases/download/{tag_name}/latest.zip"
-                            return {"version": testing_version, "download_url": download_url}
+                tag_name = release.get("tag_name", "")
+                if tag_name.startswith("testing-v"):
+                    testing_version = tag_name[len("testing-v"):]
+                elif tag_name.startswith("v"):
+                    testing_version = tag_name[len("v"):]
+                else:
+                    continue
 
-                    for asset in release.get("assets", []):
-                        if asset.get("name", "").endswith(".zip"):
-                            download_url = f"https://github.com/{owner}/{repo}/releases/download/{tag_name}/{asset['name']}"
-                            return {"version": testing_version, "download_url": download_url}
+                # Find a downloadable zip asset
+                for asset in release.get("assets", []):
+                    if asset.get("name") == "latest.zip":
+                        download_url = f"https://github.com/{owner}/{repo}/releases/download/{tag_name}/latest.zip"
+                        return {"version": testing_version, "download_url": download_url}
+
+                for asset in release.get("assets", []):
+                    if asset.get("name", "").endswith(".zip"):
+                        download_url = f"https://github.com/{owner}/{repo}/releases/download/{tag_name}/{asset['name']}"
+                        return {"version": testing_version, "download_url": download_url}
 
             return None
 
