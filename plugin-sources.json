@@ -20,6 +20,12 @@
       "token": "GITHUB_TOKEN",
       "enabled": true,
       "output": "default"
+    },
+    "test-repo": {
+      "url": "https://github.com/WigglyCorp/test-repo",
+      "token": "GITHUB_TOKEN",
+      "enabled": true,
+      "output": "default"
     }
   }
 }
