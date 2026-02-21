@@ -301,9 +301,11 @@ class RepositoryPluginProcessor:
             repo_url = repo_config["url"]
             token_name = repo_config["token"]
             print(f"Processing repository plugin: {plugin_name} from {repo_url} (using {token_name})")
-            
+
             repo_manifest = self._get_manifest_from_repository(plugin_name, repo_url, token_name)
             if repo_manifest:
+                # Tag output routing now while we have the correct plugin-sources.json key
+                repo_manifest["_output_name"] = self.config.plugin_outputs.get(plugin_name, "default")
                 manifests.append(repo_manifest)
 
         return manifests
@@ -845,13 +847,14 @@ class PluginMasterGenerator:
                 manifests.append(manifest)
                 processed_plugins.add(plugin_name)
 
-        # Attach output routing metadata
+        # Attach output routing metadata (skip if already tagged by get_repository_plugins)
         for manifest in manifests:
-            plugin_name = manifest.get("Name", "")
-            internal_name = manifest.get("InternalName", "")
-            # Check by Name first (matches plugin-sources.json keys), then InternalName
-            output_name = self.config.plugin_outputs.get(plugin_name) or self.config.plugin_outputs.get(internal_name, "default")
-            manifest["_output_name"] = output_name
+            if "_output_name" not in manifest:
+                plugin_name = manifest.get("Name", "")
+                internal_name = manifest.get("InternalName", "")
+                # Check by Name first (matches plugin-sources.json keys), then InternalName
+                output_name = self.config.plugin_outputs.get(plugin_name) or self.config.plugin_outputs.get(internal_name, "default")
+                manifest["_output_name"] = output_name
 
         return manifests
 
@@ -920,11 +923,25 @@ class PluginMasterGenerator:
             clean = {k: v for k, v in m.items() if k != "_output_name"} if final else dict(m)
             grouped.setdefault(output_name, []).append(clean)
 
+        current_output_paths = set()
         for output_name, output_path in self.config.output_files.items():
             output_manifests = grouped.get(output_name, [])
             with open(output_path, 'w', encoding='utf-8') as f:
                 json.dump(output_manifests, f, indent=4, ensure_ascii=False, sort_keys=True)
+            current_output_paths.add(output_path.resolve())
             print(f"Wrote {len(output_manifests)} plugins to {output_path} ({output_name})")
+
+        if final:
+            self._cleanup_stale_outputs(current_output_paths)
+
+    def _cleanup_stale_outputs(self, current_output_paths: set) -> None:
+        """Remove output JSON files that are no longer in the config."""
+        protected = {Path("./plugin-sources.json").resolve()}
+        for json_file in Path(".").glob("*.json"):
+            resolved = json_file.resolve()
+            if resolved not in current_output_paths and resolved not in protected:
+                json_file.unlink()
+                print(f"Removed stale output file: {json_file}")
 
     def _update_last_modified(self, manifests: List[Dict[str, Any]]) -> None:
         """Update LastUpdate timestamps based on file modification times or repository release dates."""
