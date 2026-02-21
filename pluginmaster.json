@@ -21,22 +21,6 @@
     },
     {
         "ApplicableVersion": "any",
-        "AssemblyVersion": "7.4.1",
-        "Author": "WigglyMuffin",
-        "DalamudApiLevel": 14,
-        "Description": "Uploads your game statistics (such as quest progress, gil, retainer stats) to an InfluxDB or QuestDB instance, making it possible to automatically track your progress through external tools such as Grafana.\n\nOriginally created by Liza Carvelli.",
-        "DownloadCount": 950,
-        "DownloadLinkInstall": "https://github.com/WigglyMuffin/Influx/releases/latest/download/latest.zip",
-        "DownloadLinkUpdate": "https://github.com/WigglyMuffin/Influx/releases/latest/download/latest.zip",
-        "IconUrl": "https://raw.githubusercontent.com/WigglyMuffin/DalamudPlugins/main/icons/Influx.png",
-        "InternalName": "Influx",
-        "LastUpdate": "1766759185",
-        "Name": "Influx",
-        "Punchline": "Sync game stats to InfluxDB or QuestDB",
-        "RepoUrl": "https://github.com/WigglyMuffin/Influx"
-    },
-    {
-        "ApplicableVersion": "any",
         "AssemblyVersion": "1.0.21",
         "Author": "MacaronDream",
         "DalamudApiLevel": 14,
