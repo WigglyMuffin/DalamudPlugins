@@ -288,10 +288,10 @@ class RepositoryPluginProcessor:
     
     def __init__(self, config: Config):
         self.config = config
-        self.tokens = {
-            "GITHUB_TOKEN": os.environ.get("GITHUB_TOKEN"),
-            "QSTC_FGPAT": os.environ.get("QSTC_FGPAT")
-        }
+        # Collect all token names referenced in plugin-sources.json and resolve from env
+        token_names = {rc["token"] for rc in config.repository_list.values()}
+        token_names.add("GITHUB_TOKEN")  # always available
+        self.tokens = {name: os.environ.get(name) for name in token_names}
 
     def get_repository_plugins(self) -> List[Dict[str, Any]]:
         """Get plugin manifests from configured repositories."""
