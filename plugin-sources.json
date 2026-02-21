@@ -17,6 +17,11 @@
       "url": "https://github.com/MacaronDream/QSTCompanion",
       "enabled": true,
       "output": "default"
+    },
+    "test-repo": {
+      "url": "https://github.com/WigglyCorp/test-repo",
+      "enabled": true,
+      "output": "default"
     }
   }
 }
