@@ -926,6 +926,11 @@ class PluginMasterGenerator:
         current_output_paths = set()
         for output_name, output_path in self.config.output_files.items():
             output_manifests = grouped.get(output_name, [])
+            if not output_manifests and output_name != "default":
+                if output_path.exists():
+                    output_path.unlink()
+                    print(f"Removed empty output file: {output_path} ({output_name})")
+                continue
             with open(output_path, 'w', encoding='utf-8') as f:
                 json.dump(output_manifests, f, indent=4, ensure_ascii=False, sort_keys=True)
             current_output_paths.add(output_path.resolve())
