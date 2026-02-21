@@ -1,6 +1,7 @@
 {
   "outputs": {
-    "default": "pluginmaster.json"
+    "default": "pluginmaster.json",
+    "buh": "guh.json"
   },
   "plugins": {
     "Questionable": {
