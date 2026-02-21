@@ -20,7 +20,7 @@
     },
     "test-repo": {
       "url": "https://github.com/WigglyCorp/test-repo",
-      "enabled": true,
+      "enabled": false,
       "output": "default"
     }
   }
