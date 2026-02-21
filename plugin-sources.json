@@ -8,25 +8,25 @@
       "url": "https://github.com/WigglyMuffin/Questionable",
       "enabled": true,
       "output": "default",
-      "token": "GITHUB_TOKEN"
+      "token": "PLUGIN_PAT"
     },
     "Influx": {
       "url": "https://github.com/WigglyMuffin/Influx",
       "enabled": true,
       "output": "default",
-      "token": "GITHUB_TOKEN"
+      "token": "PLUGIN_PAT"
     },
     "Questionable Companion": {
       "url": "https://github.com/MacaronDream/QSTCompanion",
       "enabled": true,
       "output": "default",
-      "token": "GITHUB_TOKEN"
+      "token": "PLUGIN_PAT"
     },
     "test-repo": {
       "url": "https://github.com/WigglyCorp/test-repo",
       "enabled": true,
       "output": "buh",
-      "token": "GITHUB_TOKEN"
+      "token": "PLUGIN_PAT"
     }
   }
 }
