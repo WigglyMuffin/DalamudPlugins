@@ -21,12 +21,6 @@
       "enabled": true,
       "output": "default",
       "token": "PLUGIN_PAT"
-    },
-    "test-repo": {
-      "url": "https://github.com/WigglyCorp/test-repo",
-      "enabled": true,
-      "output": "buh",
-      "token": "PLUGIN_PAT"
     }
   }
 }
