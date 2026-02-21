@@ -1,7 +1,6 @@
 {
   "outputs": {
-    "default": "pluginmaster.json",
-    "buh": "tuh.json"
+    "default": "pluginmaster.json"
   },
   "plugins": {
     "Questionable": {
@@ -18,11 +17,6 @@
       "url": "https://github.com/MacaronDream/QSTCompanion",
       "enabled": true,
       "output": "default"
-    },
-    "test-repo": {
-      "url": "https://github.com/WigglyCorp/test-repo",
-      "enabled": true,
-      "output": "buh"
     }
   }
 }
